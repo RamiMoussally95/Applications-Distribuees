@@ -1,7 +1,9 @@
 # Applications-Distribuees
 # JDBC PostgreSQL Project
 
-This project demonstrates how to connect a Java application to a PostgreSQL database using **JDBC (Java Database Connectivity)**. The application performs basic database operations, such as retrieving and displaying data from a `users` table.
+# JDBC PostgreSQL Project
+
+This project demonstrates how to connect a Java application to a PostgreSQL database using **JDBC (Java Database Connectivity)**. The application retrieves and displays data dynamically from a `users` table, providing clean and modular code with proper resource handling.
 
 ---
 
@@ -22,9 +24,9 @@ This project demonstrates how to connect a Java application to a PostgreSQL data
 
 ## Features
 - Connects to a **PostgreSQL 16** database.
-- Retrieves all records from the `users` table.
-- Dynamically handles and prints the column names and values.
-- Demonstrates Java database interaction using **JDBC**.
+- Dynamically retrieves and displays column names and data from the `users` table.
+- Demonstrates proper **resource management** using `try-with-resources`.
+- Modular and reusable code structure.
 
 ---
 
@@ -84,7 +86,7 @@ Add the Java Code:
 Create a folder named src and add the following file:
 src/Main.java
 Code
-Below is the Java code used in this project:
+Below is the improved and modular Java code for the project:
 
 java
 Copy
@@ -95,32 +97,53 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 
 public class Main {
+    // Database connection parameters
+    private static final String URL = "jdbc:postgresql://localhost:5432/jdbc_test";
+    private static final String USER = "postgres";
+    private static final String PASSWORD = "Rami2004";
+
     public static void main(String[] args) {
-        String url = "jdbc:postgresql://localhost:5432/jdbc_test";
-        String user = "postgres";
-        String password = "Rami2004";
-        try {
-            Class.forName("org.postgresql.Driver");
-            Connection conn = DriverManager.getConnection(url, user, password);
-            System.out.println("Connected to the PostgreSQL database successfully!");
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT * FROM users;");
-            int columnCount = rs.getMetaData().getColumnCount();
+        // Connect to the database and execute the query
+        try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD)) {
+            System.out.println("✅ Connected to the PostgreSQL database successfully!");
+
+            // Execute query and display results
+            displayUsers(connection);
+
+        } catch (Exception e) {
+            System.err.println("❌ Error: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Executes a query to retrieve and display all users from the database.
+     *
+     * @param connection The active database connection
+     */
+    private static void displayUsers(Connection connection) {
+        String query = "SELECT * FROM users";
+
+        try (Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(query)) {
+
+            // Print column names
+            int columnCount = resultSet.getMetaData().getColumnCount();
             for (int i = 1; i <= columnCount; i++) {
-                System.out.print(rs.getMetaData().getColumnName(i) + "\t");
+                System.out.print(resultSet.getMetaData().getColumnName(i) + "\t");
             }
             System.out.println("\n---------------------------------");
-            while (rs.next()) {
+
+            // Print rows
+            while (resultSet.next()) {
                 for (int i = 1; i <= columnCount; i++) {
-                    System.out.print(rs.getString(i) + "\t");
+                    System.out.print(resultSet.getString(i) + "\t");
                 }
                 System.out.println();
             }
-            rs.close();
-            stmt.close();
-            conn.close();
+
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("❌ Query execution error: " + e.getMessage());
         }
     }
 }
@@ -154,7 +177,7 @@ When you run the application, the output should look like this:
 sql
 Copy
 Edit
-Connected to the PostgreSQL database successfully!
+✅ Connected to the PostgreSQL database successfully!
 id	name	email	
 ---------------------------------
 1	Alice Dupont	alice@example.com
